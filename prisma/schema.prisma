@@ -66,27 +66,3 @@ model OAuthAccount {
   @@unique([provider, providerAccountId]) 
   @@index([userId])
 }
-
-model Campaign {
-  id          String     @id @default(ulid())
-  title       String
-  description String?
-  status      CampaignStatus @default(DRAFT)
-  budget      Float?
-  startDate   DateTime?
-  endDate     DateTime?
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  @@index([userId])
-}
-
-enum CampaignStatus {
-  DRAFT
-  ACTIVE
-  PAUSED
-  COMPLETED
-  CANCELLED
-}
