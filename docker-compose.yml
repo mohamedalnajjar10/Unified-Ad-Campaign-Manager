@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  uacm:
+    container_name: uacm
+    ports:
+      - "8071:8071"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - TSC_WATCHFILE=PriorityPollingInterval
+      - TSC_WATCHDIRECTORY=DynamicPriorityPolling
+    env_file:
+      - ./.env
+
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+
+  redis:
+    image: redis    
+
+volumes:
+  mysql_data:
+  redis_data:  
