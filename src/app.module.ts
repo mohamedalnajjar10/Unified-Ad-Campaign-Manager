@@ -4,6 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { throttleConfig } from './config/throttle.config';
+import { AuthModule } from './auth/auth.module';
+import { PrismaModule } from '../prisma/prisma.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -14,8 +17,11 @@ import { throttleConfig } from './config/throttle.config';
     ThrottlerModule.forRootAsync({
       useFactory: () => throttleConfig(),
     }),
+
+    PrismaModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

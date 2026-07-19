@@ -15,15 +15,53 @@ enum UserRole {
   VIEWER
 }
 
+enum AuthProvider {
+  GOOGLE
+  GITHUB
+  FACEBOOK
+}
+
 model User {
-  id            String    @id @default(ulid())
-  email         String    @unique
-  password      String
+  id            String     @id @default(ulid())
+  email         String     @unique
+  password      String?    
   firstName     String?
   lastName      String?
-  role          UserRole  @default(VIEWER)
-  mfaEnabled    Boolean   @default(false)
+  avatar        String?    
+  
+  role          UserRole   @default(VIEWER)
+  isActive      Boolean    @default(true)
   mfaSecret     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  mfaEnabled    Boolean    @default(false)
+  lastLoginAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  refreshTokens  RefreshToken[]
+  oauthAccounts  OAuthAccount[]
+}
+
+model RefreshToken {
+  id        String    @id @default(ulid())
+  token     String    @unique 
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime? 
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+model OAuthAccount {
+  id                  String       @id @default(ulid())
+  provider            AuthProvider
+  providerAccountId   String      
+  userId              String
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt           DateTime     @default(now())
+
+  @@unique([provider, providerAccountId]) 
+  @@index([userId])
 }
