@@ -7,11 +7,16 @@ import { ExchangeResult, IOAuthProvider } from './meta-oauth.strategy';
 export class GoogleAdsOAuthStrategy implements IOAuthProvider {
   private readonly clientId: string;
   private readonly clientSecret: string;
+  private readonly apiVersion: string;
 
   constructor(configService: ConfigService) {
     this.clientId = configService.getOrThrow<string>('GOOGLE_CLIENT_ID');
     this.clientSecret = configService.getOrThrow<string>(
       'GOOGLE_CLIENT_SECRET',
+    );
+    this.apiVersion = configService.get<string>(
+      'GOOGLE_ADS_API_VERSION',
+      'v18',
     );
   }
 
@@ -50,22 +55,41 @@ export class GoogleAdsOAuthStrategy implements IOAuthProvider {
         grant_type: 'authorization_code',
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(
+        `Google OAuth token exchange failed (${res.status}): ${text}`,
+      );
+    }
     const data = await res.json();
     if (!data.access_token)
       throw new Error(`Google OAuth error: ${JSON.stringify(data)}`);
 
     const infoRes = await fetch(
-      `https://googleads.googleapis.com/v16/customers:listAccessibleCustomers`,
+      `https://googleads.googleapis.com/${this.apiVersion}/customers:listAccessibleCustomers`,
       { headers: { Authorization: `Bearer ${data.access_token}` } },
     );
+    if (!infoRes.ok) {
+      const text = await infoRes.text();
+      throw new Error(
+        `Google Ads accounts fetch failed (${infoRes.status}): ${text}`,
+      );
+    }
     const info = await infoRes.json();
+
+    const resourceName: string | undefined = info.resourceNames?.[0];
+    if (!resourceName) {
+      throw new Error(
+        'No accessible Google Ads accounts found. Ensure your Google account has an active Google Ads account.',
+      );
+    }
 
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
       expiresAt: new Date(Date.now() + (data.expires_in || 3600) * 1000),
-      accountId: info.resourceNames?.[0] || 'unknown',
-      accountName: `Google Ads (${data.access_token.slice(0, 8)}...)`,
+      accountId: resourceName,
+      accountName: `Google Ads (${resourceName})`,
     };
   }
 
@@ -80,6 +104,10 @@ export class GoogleAdsOAuthStrategy implements IOAuthProvider {
         grant_type: 'refresh_token',
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Google token refresh failed (${res.status}): ${text}`);
+    }
     const data = await res.json();
     if (!data.access_token) throw new Error('Google token refresh failed');
     return {

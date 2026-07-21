@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { CommonModule } from '../common/common.module';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { ConnectedAccountsController } from './connected-accounts.controller';
@@ -13,7 +15,18 @@ import { XOAuthStrategy } from './strategies/x-oauth.strategy';
 import { LinkedInOAuthStrategy } from './strategies/linkedin-oauth.strategy';
 
 @Module({
-  imports: [CommonModule, PrismaModule],
+  imports: [
+    CommonModule,
+    PrismaModule,
+    JwtModule.registerAsync({
+      useFactory: (configService: ConfigService) => ({
+        secret: (configService.get<string>('OAUTH_STATE_SECRET') ??
+          configService.get<string>('JWT_SECRET')) as string,
+        signOptions: { expiresIn: '10m' },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
   controllers: [ConnectedAccountsController],
   providers: [
     ConnectedAccountsService,

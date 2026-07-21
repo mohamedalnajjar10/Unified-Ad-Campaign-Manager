@@ -48,6 +48,10 @@ export class LinkedInOAuthStrategy implements IOAuthProvider {
         grant_type: 'authorization_code',
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`LinkedIn OAuth failed (${res.status}): ${text}`);
+    }
     const data = await res.json();
     if (!data.access_token)
       throw new Error(`LinkedIn OAuth error: ${JSON.stringify(data)}`);
@@ -55,6 +59,12 @@ export class LinkedInOAuthStrategy implements IOAuthProvider {
     const adRes = await fetch('https://api.linkedin.com/v2/adAccounts', {
       headers: { Authorization: `Bearer ${data.access_token}` },
     });
+    if (!adRes.ok) {
+      const text = await adRes.text();
+      throw new Error(
+        `LinkedIn accounts fetch failed (${adRes.status}): ${text}`,
+      );
+    }
     const adData = await adRes.json();
 
     return {

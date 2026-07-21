@@ -51,6 +51,10 @@ export class SnapchatOAuthStrategy implements IOAuthProvider {
         }),
       },
     );
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Snapchat OAuth failed (${res.status}): ${text}`);
+    }
     const data = await res.json();
     if (!data.access_token)
       throw new Error(`Snapchat OAuth error: ${JSON.stringify(data)}`);
@@ -78,6 +82,10 @@ export class SnapchatOAuthStrategy implements IOAuthProvider {
         }),
       },
     );
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Snapchat token refresh failed (${res.status}): ${text}`);
+    }
     const data = await res.json();
     if (!data.access_token) throw new Error('Snapchat token refresh failed');
     return {

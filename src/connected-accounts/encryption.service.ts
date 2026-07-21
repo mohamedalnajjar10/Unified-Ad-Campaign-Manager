@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
@@ -10,8 +10,10 @@ export class EncryptionService {
 
   constructor(configService: ConfigService) {
     const hex = configService.get<string>('ENCRYPTION_KEY');
-    if (!hex || hex.length !== 32) {
-      throw new Error('ENCRYPTION_KEY must be 32 hex characters');
+    if (!hex || hex.length !== 64) {
+      throw new Error(
+        'ENCRYPTION_KEY must be 64 hex characters (256-bit key for aes-256-gcm)',
+      );
     }
     this.key = Buffer.from(hex, 'hex');
   }
@@ -27,7 +29,11 @@ export class EncryptionService {
 
   decrypt(encryptedText: string): string {
     const parts = encryptedText.split(':');
-    if (parts.length !== 3) throw new Error('Invalid encrypted format');
+    if (parts.length !== 3) {
+      throw new BadRequestException(
+        `Invalid encrypted format: expected 3 colon-separated parts (iv:authTag:ciphertext), got ${parts.length}`,
+      );
+    }
     const [ivHex, authTagHex, encrypted] = parts;
     const decipher = crypto.createDecipheriv(
       ALGORITHM,

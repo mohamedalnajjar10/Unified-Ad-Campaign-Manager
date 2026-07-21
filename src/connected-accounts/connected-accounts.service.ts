@@ -4,6 +4,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EncryptionService } from './encryption.service';
@@ -17,12 +18,13 @@ export class ConnectedAccountsService {
     private readonly encryption: EncryptionService,
     private readonly factory: OAuthProviderFactory,
     private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async getAuthUrl(userId: string, provider: AdProvider) {
+  getAuthUrl(userId: string, provider: AdProvider) {
     const strategy = this.factory.getStrategy(provider);
     const redirectUri = `${this.configService.get('API_URL')}/api/v1/connected-accounts/${provider.toLowerCase()}/callback`;
-    const state = `${userId}:${Date.now()}`;
+    const state = this.jwtService.sign({ sub: userId });
     return strategy.getAuthUrl(state, redirectUri);
   }
 

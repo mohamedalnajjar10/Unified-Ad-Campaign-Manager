@@ -50,6 +50,10 @@ export class XOAuthStrategy implements IOAuthProvider {
         code_verifier: 'challenge',
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`X OAuth failed (${res.status}): ${text}`);
+    }
     const data = await res.json();
     if (!data.access_token)
       throw new Error(`X OAuth error: ${JSON.stringify(data)}`);
@@ -78,6 +82,10 @@ export class XOAuthStrategy implements IOAuthProvider {
         client_id: this.clientId,
       }),
     });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`X token refresh failed (${res.status}): ${text}`);
+    }
     const data = await res.json();
     if (!data.access_token) throw new Error('X token refresh failed');
     return {

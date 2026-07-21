@@ -47,6 +47,10 @@ export class TikTokOAuthStrategy implements IOAuthProvider {
         }),
       },
     );
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`TikTok OAuth failed (${res.status}): ${text}`);
+    }
     const { data } = await res.json();
     if (!data?.access_token) throw new Error('TikTok OAuth failed');
 
@@ -73,6 +77,10 @@ export class TikTokOAuthStrategy implements IOAuthProvider {
         }),
       },
     );
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`TikTok token refresh failed (${res.status}): ${text}`);
+    }
     const { data } = await res.json();
     if (!data?.access_token) throw new Error('TikTok token refresh failed');
     return {
