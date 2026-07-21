@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { createHash } from 'crypto';
@@ -39,7 +44,12 @@ export class AuthService {
     return createHash('sha256').update(token).digest('hex');
   }
 
-  async signUp(email: string, password: string, firstName?: string, lastName?: string): Promise<AuthTokens> {
+  async signUp(
+    email: string,
+    password: string,
+    firstName?: string,
+    lastName?: string,
+  ): Promise<AuthTokens> {
     const hashedPassword = await hash(password, 12);
 
     try {
@@ -150,7 +160,9 @@ export class AuthService {
     } catch (error) {
       if (error?.code === 'P2002') {
         // Race condition: user was created between our check and create
-        const existingUser = await this.prisma.user.findUnique({ where: { email } });
+        const existingUser = await this.prisma.user.findUnique({
+          where: { email },
+        });
         if (existingUser) {
           return this.generateTokens(existingUser);
         }
@@ -170,7 +182,9 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email };
 
     const expiresIn = Number(this.configService.get('JWT_EXPIRES_IN', '900'));
-    const refreshExpiresIn = Number(this.configService.get('JWT_REFRESH_EXPIRES_IN', '604800'));
+    const refreshExpiresIn = Number(
+      this.configService.get('JWT_REFRESH_EXPIRES_IN', '604800'),
+    );
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -229,7 +243,9 @@ export class AuthService {
         where: { userId: tokenRecord.userId, revokedAt: null },
         data: { revokedAt: new Date() },
       });
-      throw new UnauthorizedException('Token reuse detected, all sessions revoked');
+      throw new UnauthorizedException(
+        'Token reuse detected, all sessions revoked',
+      );
     }
 
     if (tokenRecord.expiresAt < new Date()) {

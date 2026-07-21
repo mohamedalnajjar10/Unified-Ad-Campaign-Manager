@@ -39,7 +39,12 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user' })
   async signUp(@Body() dto: SignUpDto): Promise<AuthTokens> {
-    return this.authService.signUp(dto.email, dto.password, dto.firstName, dto.lastName);
+    return this.authService.signUp(
+      dto.email,
+      dto.password,
+      dto.firstName,
+      dto.lastName,
+    );
   }
 
   @Post('login')
@@ -59,7 +64,10 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({ summary: 'Google OAuth callback' })
-  async googleAuthCallback(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+  async googleAuthCallback(
+    @Req() req: AuthenticatedRequest,
+    @Res() res: Response,
+  ) {
     const tokens = await this.authService.validateGoogleUser(req.user);
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const fragment = `#accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;

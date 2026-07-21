@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { hash } from 'bcryptjs';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -25,7 +30,10 @@ export class UsersService {
       });
       return this.excludePassword(user);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
         throw new ConflictException('Email already registered');
       }
       throw new InternalServerErrorException('Failed to create user');
@@ -68,7 +76,7 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto) {
-    const data: Prisma.UserUpdateInput = { ...dto } as any;
+    const data: Prisma.UserUpdateInput = { ...dto };
 
     if (dto.password && dto.password.trim().length > 0) {
       data.password = await hash(dto.password, 12);
@@ -80,7 +88,10 @@ export class UsersService {
       const user = await this.prisma.user.update({ where: { id }, data });
       return this.excludePassword(user);
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         throw new NotFoundException('User not found');
       }
       throw error;
@@ -91,7 +102,10 @@ export class UsersService {
     try {
       await this.prisma.user.delete({ where: { id } });
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2025'
+      ) {
         throw new NotFoundException('User not found');
       }
       throw error;

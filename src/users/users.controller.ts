@@ -65,7 +65,10 @@ export class UsersController {
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a user (Admin only)' })
-  async remove(@Param('id', ParseULIDPipe) id: string, @CurrentUser() user: RequestUser) {
+  async remove(
+    @Param('id', ParseULIDPipe) id: string,
+    @CurrentUser() user: RequestUser,
+  ) {
     if (id === user.id) {
       throw new BadRequestException('Cannot delete yourself');
     }
